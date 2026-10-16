@@ -41,3 +41,4 @@ jobs:
           EXPECTED_TAG="v$(node -p 'require("./package.json").version')"
           test "$RELEASE_TAG" = "$EXPECTED_TAG"
           gh release upload "$RELEASE_TAG" dist/*-mac-universal.dmg dist/SHA256SUMS-macOS --repo "$GITHUB_REPOSITORY"
+          gh release edit "$RELEASE_TAG" --notes-file RELEASE_NOTES.md --repo "$GITHUB_REPOSITORY"
