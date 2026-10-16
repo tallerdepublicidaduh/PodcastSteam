@@ -45,6 +45,21 @@ El código del renderer no tiene acceso a Node.js. Los RSS se leen mediante una 
 
 En Linux hace falta un entorno gráfico y la configuración de sandbox que requiere Electron en la distribución. Si aparece un error de `chrome-sandbox`, resuelve los permisos o la configuración de namespaces según la distribución; los paquetes para uso habitual no desactivan el sandbox.
 
+### Si abre con doble clic pero no desde Steam en Linux
+
+El AppImage es nativo de Linux. En **Propiedades → Compatibilidad**, desmarca **Forzar el uso de una herramienta específica de compatibilidad**; Proton sirve para ejecutables de Windows. Cierra cualquier instancia de PodcastSteam antes de probar. Comprueba que **Destino** sea la ruta absoluta del AppImage, entre comillas si contiene espacios, y que **Iniciar en** sea su carpeta. Como prueba adicional, desactiva la superposición de Steam solo para esta aplicación y vuelve a intentar una vez. Estos pasos no confirman por sí solos la causa del fallo.
+
+Para registrar el arranque, descarga [PodcastSteam-Steam.sh](scripts/PodcastSteam-Steam.sh) y configura un acceso directo nativo con:
+
+- **Destino:** `/usr/bin/bash`
+- **Iniciar en:** la carpeta donde guardaste el script y el AppImage.
+- **Opciones de lanzamiento:** `"/ruta/PodcastSteam-Steam.sh" "/ruta/PodcastSteam-0.3.0.AppImage"`
+- **Compatibilidad forzada:** desactivada.
+
+Sustituye las rutas por las reales de tu equipo. El script cambia a la carpeta del AppImage, espera a que termine y conserva su código de salida. Guarda la salida en `${XDG_STATE_HOME:-~/.local/state}/PodcastSteam/steam-launch.log` y conserva el registro anterior como `.previous`. No vuelca variables de entorno ni argumentos; los mensajes de Electron sí se incluyen. El modo normal mantiene el entorno de Steam y no añade opciones a Electron.
+
+Si el registro apunta a bibliotecas o a la superposición inyectadas por Steam, se puede hacer una prueba controlada con `--clean-runtime` antes de la ruta del AppImage. Ese modo retira `LD_PRELOAD` y `LD_LIBRARY_PATH` únicamente para el proceso de PodcastSteam. No modifica Steam, el sistema, los controladores ni el sandbox, y su eficacia en cada SteamMachine debe comprobarse en ese equipo. No se incluye en el arranque por defecto. En instalaciones de Steam como Flatpak, los permisos y el contenedor también pueden ser relevantes; el registro indica si el script detecta ese contenedor.
+
 ## Pruebas
 
 ```bash
