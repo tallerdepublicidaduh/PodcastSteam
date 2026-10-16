@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http: data:; media-src https: http:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>PodcastSteam</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#"><span class="brand-icon">◉</span> PODCAST<span>STEAM</span></a>
+    <div class="section-label">TU ESPACIO DE ESCUCHA</div>
+    <nav aria-label="Biblioteca">
+      <button class="nav active" data-view="all"><span>▦</span> Mi biblioteca <b id="library-count">0</b></button>
+      <button class="nav" data-view="progress"><span>◷</span> Seguir escuchando</button>
+      <button class="nav" data-view="favorites"><span>♡</span> Favoritos</button>
+    </nav>
+    <div class="sidebar-bottom"><span class="status-dot"></span> LISTO PARA TU PRÓXIMA PARTIDA<p>Tu juego. Tus historias.</p><small>Podcasts públicos · RSS</small></div>
+  </aside>
+  <main>
+    <header><div class="breadcrumb">TU BIBLIOTECA <span>/</span> PODCASTS</div><button id="add-top" class="button secondary">＋ Añadir podcast</button></header>
+    <section class="hero">
+      <div class="hero-copy"><div class="eyebrow"><span class="status-dot"></span> EL COMPAÑERO DE TUS PARTIDAS</div><h1>Dale otra banda sonora<br>a tu próxima partida<span>.</span></h1><p>Descubre historias mientras exploras otros mundos.<br>Tus podcasts, a tu ritmo, sin interrumpir el juego.</p><button id="add-hero" class="button primary">＋ Añadir mi primer podcast</button><div class="hero-footnote">Sin cuentas. Sin suscripciones. Solo dale al play.</div></div>
+      <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="record"><div class="record-center">◉</div></div><div class="sound-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="art-label">PRESS PLAY. KEEP PLAYING.</span></div>
+    </section>
+    <section class="library-section">
+      <div class="library-heading"><div><div class="eyebrow muted">HECHO PARA ESCUCHAR</div><h2 id="view-title">Mi biblioteca <span id="podcast-count">0 podcasts</span></h2></div><div class="library-tools"><label class="search"><span>⌕</span><input id="search" type="search" placeholder="Buscar un episodio…" aria-label="Buscar un episodio"></label><button id="refresh" class="icon-button" title="Actualizar podcasts" aria-label="Actualizar podcasts">↻</button></div></div>
+      <div id="feed-tabs" class="feed-tabs" aria-label="Filtrar por podcast"></div>
+      <div id="empty" class="empty"><div class="empty-icon">◉</div><h3>Tu biblioteca empieza con una historia</h3><p>Añade el enlace RSS de tu podcast favorito.<br>Nosotros ponemos el reproductor; tú eliges la aventura.</p><button id="add-empty" class="button secondary">＋ Añadir podcast por RSS</button><small>Compatible con podcasts públicos en formato RSS 2.0</small></div>
+      <div id="episodes" class="episodes"></div>
+    </section>
+    <footer class="page-footer"><span>◈ &nbsp; DISEÑADO PARA SEGUIR JUGANDO</span><span>Windows &nbsp;·&nbsp; macOS &nbsp;·&nbsp; SteamOS</span></footer>
+  </main>
+  <section class="player" aria-label="Reproductor">
+    <div class="now-playing"><div class="mini-cover" id="mini-cover">◉</div><div><strong id="now-title">Tu próxima historia te espera</strong><span id="now-podcast">Elige un episodio para empezar</span></div><button id="player-favorite" class="icon-button" aria-label="Marcar episodio favorito" disabled>♡</button></div>
+    <div class="transport"><div class="transport-buttons"><button id="back" class="icon-button" aria-label="Retroceder 15 segundos" disabled>↶<small>15</small></button><button id="play" class="play-button" aria-label="Reproducir" disabled>▶</button><button id="forward" class="icon-button" aria-label="Avanzar 30 segundos" disabled>↷<small>30</small></button><select id="speed" aria-label="Velocidad de reproducción"><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></div><div class="timeline"><time id="elapsed">0:00</time><input id="seek" type="range" min="0" max="100" value="0" step="0.1" aria-label="Posición de reproducción" disabled><time id="duration">0:00</time></div></div>
+    <div class="volume"><span aria-hidden="true">♫</span><input id="volume" type="range" min="0" max="1" value="0.8" step="0.01" aria-label="Volumen del podcast"><span class="background-label"><span class="status-dot"></span> EN SEGUNDO PLANO</span></div>
+  </section>
+  <dialog id="add-dialog"><form id="add-form"><div class="dialog-heading"><div><div class="eyebrow">AMPLÍA TU BIBLIOTECA</div><h2>Añadir un podcast</h2></div><button id="close-dialog" type="button" class="icon-button" aria-label="Cerrar">×</button></div><p>Pega el enlace RSS público del podcast. Lo encontrarás en su web o en su opción de suscripción.</p><label for="rss-url">Enlace RSS</label><input id="rss-url" type="url" placeholder="https://ejemplo.com/podcast/feed.xml" required><p id="form-error" role="alert"></p><button id="submit-feed" class="button primary" type="submit">Añadir a mi biblioteca →</button><small>Spotify y otros contenidos exclusivos no ofrecen siempre un RSS público.</small></form></dialog>
+  <div id="notice" class="notice" role="status" hidden></div>
+  <audio id="audio" preload="metadata"></audio>
+  <script src="renderer.js"></script>
+</body>
+</html>
