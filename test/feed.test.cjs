@@ -18,6 +18,10 @@ test('admite un solo episodio y resuelve URL relativas', () => {
   const feed = parseFeed('<rss><channel><title>Uno</title><item><title>A</title><enclosure url="/a.mp3"/></item></channel></rss>', 'https://example.com/rss');
   assert.equal(feed.episodes[0].audio, 'https://example.com/a.mp3');
 });
+test('lee categorías iTunes anidadas y categorías RSS sin duplicados', () => {
+  const feed = parseFeed('<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel><title>Ciencia</title><itunes:category text="Science"><itunes:category text="Astronomy"/></itunes:category><itunes:category text="History"/><category>Science</category></channel></rss>', 'https://example.com/feed');
+  assert.deepEqual(feed.categories, ['Science', 'Astronomy', 'History']);
+});
 test('rechaza documentos malformados, entidades y formatos ajenos a RSS', () => {
   for (const input of ['<rss>', '<html><body>hola</body></html>', '<!DOCTYPE rss [<!ENTITY x SYSTEM "file:///etc/passwd">]><rss/>']) {
     assert.throws(() => parseFeed(input, 'https://example.com'));

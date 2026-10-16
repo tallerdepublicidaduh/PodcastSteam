@@ -13,6 +13,13 @@ function plain(value) {
   return String(text ?? '').replace(/<[^>]*>/g, '').trim();
 }
 
+function categories(value) {
+  if (Array.isArray(value)) return value.flatMap(categories);
+  if (typeof value === 'string') return [plain(value)];
+  if (!value || typeof value !== 'object') return [];
+  return [plain(value['@_text'] || value['#text']), ...categories(value['itunes:category'])].filter(Boolean);
+}
+
 function parseFeed(xml, source) {
   if (/<!DOCTYPE|<!ENTITY/i.test(xml) || XMLValidator.validate(xml) !== true) {
     throw new Error('El documento no es un RSS XML válido.');
@@ -36,6 +43,7 @@ function parseFeed(xml, source) {
     url: source, title: plain(channel.title) || 'Podcast sin título',
     author: plain(channel['itunes:author'] || channel.author),
     description: plain(channel.description),
+    categories: [...new Set([...categories(channel['itunes:category']), ...categories(channel.category)])],
     artwork: webUrl(channel['itunes:image']?.['@_href'] || channel.image?.url, source), episodes
   };
 }

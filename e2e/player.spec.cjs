@@ -20,10 +20,11 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
   const profile = await fs.mkdtemp(path.join(os.tmpdir(), 'podcaststeam-e2e-'));
   const wav = makeWav();
   const server = http.createServer((req, res) => {
-    if (req.url === '/feed') {
+    if (req.url === '/feed' || req.url === '/feed-tech') {
       res.setHeader('Content-Type', 'application/rss+xml');
-      res.end(`<rss version="2.0"><channel><title>Historias de prueba</title><description>Podcast local</description><item><title>Una partida, una historia</title><description><![CDATA[<script>window.injected=true</script> Un episodio de prueba]]></description><enclosure url="${base}/audio.wav" type="audio/wav"/></item></channel></rss>`);
-    } else if (req.url === '/audio.wav') {
+      const tech = req.url === '/feed-tech';
+      res.end(`<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel><itunes:category text="${tech ? 'Technology' : 'Science'}"/><title>${tech ? 'Tecnología de prueba' : 'Historias de prueba'}</title><description>Podcast local</description><item><title>${tech ? 'Tecnología en partida' : 'Una partida, una historia'}</title><description><![CDATA[<script>window.injected=true</script> Un episodio de prueba]]></description><enclosure url="${base}/audio.wav?episode=${tech ? 2 : 1}" type="audio/wav"/></item></channel></rss>`);
+    } else if (req.url.startsWith('/audio.wav')) {
       const range = req.headers.range?.match(/bytes=(\d+)-(\d*)/);
       const start = range ? Number(range[1]) : 0;
       const end = range?.[2] ? Math.min(Number(range[2]), wav.length - 1) : wav.length - 1;
@@ -34,6 +35,7 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
   let app;
+  const errors = [];
   async function launch() {
     app = await electron.launch({
       ...(process.env.PODCASTSTEAM_EXECUTABLE ? { executablePath: process.env.PODCASTSTEAM_EXECUTABLE } : {}),
@@ -41,12 +43,11 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
     });
     const page = await app.firstWindow();
     await page.waitForLoadState('domcontentloaded');
+    page.on('pageerror', error => errors.push(error.message));
     return page;
   }
   try {
     let page = await launch();
-    const errors = [];
-    page.on('pageerror', error => errors.push(error.message));
     await expect(page.locator('#play')).toBeDisabled();
     await page.locator('#add-top').click();
     await page.locator('#rss-url').fill(`${base}/missing`);
@@ -57,11 +58,12 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
     await expect(page.locator('.episode')).toHaveCount(1);
     expect(await page.evaluate(() => window.injected)).toBeUndefined();
     expect(await page.evaluate(() => typeof require)).toBe('undefined');
-    await page.locator('.episode .icon-button').click();
+    await page.locator('.episode .favorite-button').click();
     await page.locator('[data-view="favorites"]').click();
     await expect(page.locator('.episode')).toHaveCount(1);
     await page.locator('.episode-play').click();
     await expect.poll(() => page.locator('#audio').evaluate(audio => !audio.paused && audio.currentTime > 0.5)).toBe(true);
+    await page.locator('#player-settings').click();
     await page.locator('#forward').click();
     await expect.poll(() => page.locator('#audio').evaluate(audio => audio.currentTime)).toBeGreaterThan(30);
     await page.locator('#back').click();
@@ -69,6 +71,7 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
     await page.locator('#speed').selectOption('1.5');
     await page.locator('#volume').fill('0.35');
     expect(await page.locator('#audio').evaluate(audio => audio.volume)).toBeCloseTo(0.35);
+    await page.locator('#close-player-dialog').click();
     const beforeHide = await page.locator('#audio').evaluate(audio => audio.currentTime);
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].hide());
     await expect.poll(() => page.locator('#audio').evaluate(audio => audio.currentTime), { timeout: 10000 }).toBeGreaterThan(beforeHide + 1.5);
@@ -103,12 +106,12 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
       Object.defineProperty(navigator, 'getGamepads', { value: () => [window.testPad] });
       window.testPad.buttons[2].pressed = true;
     });
-    await expect.poll(() => page.locator('#audio').evaluate(audio => audio.paused)).toBe(false);
+    await expect(page.locator('#queue-count')).toHaveText('1');
+    expect(await page.locator('#audio').evaluate(audio => audio.paused)).toBe(true);
     await page.evaluate(() => { window.testPad.buttons[2].pressed = false; });
-    await page.locator('#play').click();
     await page.locator('#search').focus();
     await page.evaluate(() => { window.testPad.buttons[15].pressed = true; });
-    await expect(page.locator('#refresh')).toBeFocused();
+    await expect(page.locator('#add-top')).toBeFocused();
     await page.evaluate(() => { window.testPad.buttons[15].pressed = false; });
     await page.locator('#now-title').click();
     await page.keyboard.press('Space');
@@ -125,7 +128,7 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
     }
     await expect(page.locator('#input-mode')).toHaveText('Mando conectado');
     await page.locator('[data-view="all"]').focus();
-    await pressPad(13);
+    await pressPad(15);
     await expect(page.locator('[data-view="progress"]')).toBeFocused();
     expect(await page.locator('body').evaluate(body => body.classList.contains('using-gamepad'))).toBe(true);
     expect(await page.locator('[data-view="progress"]').evaluate(node => getComputedStyle(node).outlineStyle)).toBe('solid');
@@ -133,12 +136,13 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
     await expect(page.locator('[data-view="progress"]')).toHaveAttribute('aria-current', 'page');
     await pressPad(1);
     await expect(page.locator('[data-view="all"]')).toHaveAttribute('aria-current', 'page');
-    await page.locator('.episode .icon-button').focus();
+    await page.locator('.episode .favorite-button').focus();
     await pressPad(0);
-    await expect(page.locator('.episode .icon-button')).toHaveAttribute('aria-pressed', 'false');
-    await expect(page.locator('.episode .icon-button')).toBeFocused();
+    await expect(page.locator('.episode .favorite-button')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('.episode .favorite-button')).toBeFocused();
     await pressPad(0);
-    await expect(page.locator('.episode .icon-button')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.episode .favorite-button')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#player-settings').click();
     await page.locator('#volume').focus();
     await pressPad(15);
     expect(await page.locator('#audio').evaluate(audio => audio.volume)).toBeCloseTo(0.4);
@@ -151,12 +155,52 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
     expect(await page.locator('#audio').evaluate(audio => audio.playbackRate)).toBe(2);
     await pressPad(14);
     expect(await page.locator('#audio').evaluate(audio => audio.playbackRate)).toBe(1.5);
+    await pressPad(1);
+    await expect(page.locator('#player-dialog')).not.toBeVisible();
     await page.locator('#add-top').focus();
     await pressPad(0);
     await expect(page.locator('#add-dialog')).toBeVisible();
     await expect(page.locator('#rss-url')).toBeFocused();
     await pressPad(1);
     await expect(page.locator('#add-dialog')).not.toBeVisible();
+    await pressPad(3);
+    await expect(page.locator('#search')).toBeFocused();
+    await pressPad(5);
+    await expect(page.locator('.category-card[data-category="technology"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.episode')).toHaveCount(0);
+    await pressPad(1);
+    await expect(page.locator('.episode')).toHaveCount(1);
+    await page.locator('#add-top').click();
+    await page.locator('#rss-url').fill(`${base}/feed-tech`);
+    await page.locator('#submit-feed').click();
+    await expect(page.locator('#library-count')).toHaveText('2');
+    await page.locator('.category-card[data-category="science"]').click();
+    await expect(page.locator('#featured-title')).toHaveText('Una partida, una historia');
+    await expect(page.locator('.episode')).toHaveCount(1);
+    await page.locator('.category-card[data-category="technology"]').click();
+    await expect(page.locator('#featured-title')).toHaveText('Tecnología en partida');
+    await expect(page.locator('.episode')).toHaveCount(1);
+    await page.locator('.episode .queue-button').click();
+    await expect(page.locator('#queue-count')).toHaveText('2');
+    await app.close(); app = null;
+    page = await launch();
+    await expect(page.locator('#queue-count')).toHaveText('2');
+    await page.locator('[data-view="queue"]').click();
+    await expect(page.locator('.episode')).toHaveCount(2);
+    await page.locator('#next').click();
+    await expect(page.locator('#queue-count')).toHaveText('1');
+    await expect(page.locator('#now-title')).toHaveText('Una partida, una historia');
+    await expect.poll(() => page.locator('#audio').evaluate(audio => audio.duration)).toBe(90);
+    await page.locator('#audio').evaluate(audio => { audio.currentTime = audio.duration - 0.25; });
+    await expect(page.locator('#now-title')).toHaveText('Tecnología en partida');
+    await expect(page.locator('#queue-count')).toHaveText('0');
+    expect(await page.evaluate(() => {
+      const stored = JSON.parse(localStorage.getItem('podcaststeam.v1'));
+      return Object.values(stored.progress).some(progress => progress.completed);
+    })).toBe(true);
+    await expect.poll(() => page.locator('#audio').evaluate(audio => !audio.paused && audio.currentTime > 0.3)).toBe(true);
+    await page.locator('#play').click();
+    await page.locator('[data-view="all"]').click();
     await page.setViewportSize({ width: 1280, height: 800 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     for (const size of [{ width: 780, height: 600 }, { width: 1280, height: 800 }]) {

@@ -6,7 +6,7 @@ window.controllerNavigation = {
     if (!controls.length) return;
     const active = document.activeElement;
     if (!controls.includes(active)) {
-      (controls.find(node => node.matches('[data-view="all"]')) || controls[0]).focus();
+      (controls.find(node => node.matches('#featured-play')) || controls[0]).focus();
       return;
     }
     const bounds = active.getBoundingClientRect();
@@ -21,7 +21,10 @@ window.controllerNavigation = {
       const distance = x * vector[0] + y * vector[1];
       if (distance <= 8) continue;
       const offset = Math.abs(x * vector[1] + y * vector[0]);
-      const score = distance + offset * 2.5 + (offset > distance ? 500 : 0);
+      // Prefer the same row/column, using edges for long search fields and sliders.
+      const aligned = vector[0] ? rect.top < bounds.bottom && rect.bottom > bounds.top : rect.left < bounds.right && rect.right > bounds.left;
+      const gap = direction === 'right' ? rect.left - bounds.right : direction === 'left' ? bounds.left - rect.right : direction === 'down' ? rect.top - bounds.bottom : bounds.top - rect.bottom;
+      const score = Math.max(0, gap) + offset * 2.5 + (aligned ? 0 : 1000);
       if (score < best) { best = score; target = node; }
     }
     if (target) {

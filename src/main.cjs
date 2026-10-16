@@ -15,7 +15,7 @@ else {
     });
     window = new BrowserWindow({
       width: 1320, height: 850, minWidth: 780, minHeight: 600,
-      backgroundColor: '#171d25', title: 'PodcastSteam', autoHideMenuBar: true,
+      backgroundColor: '#1c2227', title: 'PodcastSteam', autoHideMenuBar: true,
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false }
     });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

@@ -1,29 +1,29 @@
-## PodcastSteam 0.2.0 · Tu biblioteca, lista para jugar
+## PodcastSteam 0.3.0 · Diseño de consola
 
-Nueva interfaz inspirada en Steam: tonos azul oscuro, acentos cian y controles más visibles.
+Interfaz adaptada a la referencia visual del usuario: fondo carbón, portada grande a la izquierda, búsqueda superior, tarjetas ilustradas de categorías, bordes azules luminosos y reproductor horizontal con progreso.
 
-- Biblioteca con tarjetas de podcasts, portadas y número de episodios.
-- Reproductor fijo con botones más grandes y estado de reproducción visible.
-- Foco de alto contraste y navegación con cruceta según la posición de los controles.
-- Ajustes de volumen, posición y velocidad con izquierda/derecha del mando; A selecciona, B vuelve, X reproduce/pausa y LB/RB saltan.
-- Barra inferior con las acciones de mando e indicador de conexión. El mando se atiende solo cuando la app tiene el foco.
-- Biblioteca, favoritos y puntos de escucha de la versión anterior conservan el mismo formato de guardado.
+- Las portadas, títulos y autores reales provienen de tus podcasts RSS. Se incluyen ilustraciones de categorías y una portada de reserva.
+- Categorías Ciencia, Historia, Comedia, True Crime y Tecnología, obtenidas de las etiquetas RSS/iTunes en inglés o español. Los podcasts sin etiquetas permanecen en Todos. Actualiza tus podcasts antiguos para leer sus categorías.
+- Búsqueda de podcasts y episodios de tu biblioteca, favoritos y episodios empezados.
+- Cola guardada entre sesiones y reproducción automática del siguiente episodio al finalizar el actual.
+- Mando: A selecciona, B vuelve, X añade/quita de cola, Y busca, LB/RB cambian de categoría y View abre los controles del reproductor. La cruceta navega y ajusta el control enfocado.
+- Volumen, velocidad y saltos −15/+30 segundos disponibles en el icono de ajustes del reproductor.
 
-![Vista de ejemplo de PodcastSteam](https://raw.githubusercontent.com/tallerdepublicidaduh/PodcastSteam/v0.2.0/docs/interface.png)
+![Vista de ejemplo de la nueva interfaz](https://raw.githubusercontent.com/tallerdepublicidaduh/PodcastSteam/v0.3.0/docs/interface.png)
 
-La captura muestra contenido de ejemplo; la biblioteca de la aplicación se llena con tus propios enlaces RSS.
+La captura contiene podcasts ficticios y audio de prueba para mostrar el diseño. No se añaden podcasts de ejemplo al instalar la aplicación; incorpora tus propios RSS. La búsqueda y los filtros consultan tu biblioteca, no un directorio externo.
 
 ## Descargas
 
-- **Mac:** `PodcastSteam-0.2.0-mac-universal.dmg`, para Intel y Apple Silicon. Abre el DMG, arrastra la app a Aplicaciones y sustituye la anterior con la aplicación cerrada. El proceso de publicación verifica ambas arquitecturas, la firma ad hoc y la prueba de reproducción sobre la app universal empaquetada antes de adjuntar el DMG.
-- **Linux/SteamOS:** `PodcastSteam-0.2.0.AppImage`, para x86_64. Dale permiso de ejecución y añádela a Steam como producto ajeno a Steam. Requiere entorno gráfico y la configuración de sandbox de Electron correspondiente a tu distribución.
+- **Mac:** `PodcastSteam-0.3.0-mac-universal.dmg`, para Intel y Apple Silicon. Cierra la versión anterior desde Salir antes de sustituirla en Aplicaciones. Se conserva el perfil de biblioteca, favoritos y puntos de escucha. El proceso de publicación verifica ambas arquitecturas, la firma ad hoc y el funcionamiento de la aplicación empaquetada.
+- **Linux/SteamOS:** `PodcastSteam-0.3.0.AppImage`, para x86_64. Concede permiso de ejecución y añádela a Steam como producto ajeno a Steam.
 
-Cada paquete aparece cuando termina su compilación y verificación. `SHA256SUMS` y `SHA256SUMS-macOS` contienen las sumas de integridad. No se incluye instalador de Windows en esta release.
+Cada descarga aparece al terminar su compilación y validación. `SHA256SUMS` y `SHA256SUMS-macOS` permiten comprobar la integridad. El instalador de Windows no está adjunto a esta release.
 
-## Pruebas y límites de esta versión de prueba
+## Validación y límites
 
-La prueba de escritorio comprueba reproducción con audio real local, avance con ventana oculta, reanudación, favoritos, volumen y velocidad; también navegación espacial, conservación del foco, ajuste de controles con mando simulado y distribución a 1280×800 y 780×600. El mando físico, Steam Input y la reproducción durante una partida real siguen pendientes de validación en hardware.
+Pruebas de RSS y categorías, reproducción con audio local real, volumen, velocidad, reanudación con ventana oculta, mando simulado, filtros y cola persistente con avance automático. La interfaz se comprueba a 1280×800 y 780×600. La prueba en un juego real, Steam Input y los mandos físicos en Steam Deck siguen pendientes.
 
-El DMG usa firma ad hoc y no tiene certificado Developer ID ni notarización de Apple. Si macOS lo bloquea después del primer intento, autoriza esta aplicación concreta en Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente. No desactives Gatekeeper globalmente.
+El DMG tiene firma ad hoc y carece de certificado Developer ID y notarización. Si macOS lo bloquea tras intentar abrirlo, autoriza esta aplicación concreta en Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente; no desactives Gatekeeper globalmente.
 
-En Linux, cerrar la ventana termina la aplicación: minimízala o cambia al juego para conservar el audio. En macOS/Windows, cerrar la ventana la oculta en la bandeja; usa Salir para terminar el proceso. Los podcasts exclusivos de servicios de pago no están incluidos.
+En Linux, cerrar la ventana termina el proceso: minimiza o cambia al juego para conservar la reproducción. En macOS/Windows, cerrar la ventana la oculta en la bandeja; utiliza Salir para terminar. Se requiere acceso a los servidores del podcast. No se incluye contenido exclusivo de servicios de pago.
