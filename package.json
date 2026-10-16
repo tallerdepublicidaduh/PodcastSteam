@@ -39,8 +39,10 @@
     },
     "mac": {
       "target": [
-        "dmg"
+        { "target": "dmg", "arch": ["universal"] }
       ],
+      "artifactName": "PodcastSteam-${version}-mac-universal.${ext}",
+      "identity": "-",
       "category": "public.app-category.music"
     },
     "win": {

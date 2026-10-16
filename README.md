@@ -75,3 +75,9 @@ Los resultados están en `dist/`. Genera cada paquete en su sistema nativo. El w
 Los paquetes de desarrollo no están firmados ni notarizados. La distribución pública requiere certificados y configuración de firma de Windows/macOS, revisión de licencias y las pruebas de hardware pendientes. No se incluyen credenciales. La versión inicial usa el icono predeterminado de Electron para el empaquetado.
 
 El workflow **Release Linux** publica una prerelease con AppImage y SHA256SUMS al subir una etiqueta `v*`. Ejecuta primero las pruebas y compila el paquete en GitHub. Subir una etiqueta de versión implica publicar: hazlo solo con autorización. La release `v0.1.0` fue autorizada como versión de prueba. Este flujo utiliza el token temporal de GitHub Actions, sin credenciales guardadas en el proyecto.
+
+### Prueba en macOS
+
+El paquete DMG universal incluye Intel (x86_64) y Apple Silicon (arm64). El workflow **Release macOS**, activado por etiquetas `macos-v*`, ejecuta las pruebas de escritorio, compila el paquete universal, prueba la aplicación empaquetada, comprueba ambas arquitecturas y su firma ad hoc, y adjunta el DMG y `SHA256SUMS-macOS` a la release `v*` existente. No sustituye archivos publicados ni crea una release nueva. La etiqueta debe coincidir con la versión de package.json.
+
+Abre el DMG y arrastra PodcastSteam a Aplicaciones. Esta versión utiliza firma ad hoc, sin certificado Developer ID ni notarización: macOS puede pedir autorización. Si la bloquea tras intentar abrirla, revisa **Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente** para autorizar esta aplicación concreta. No desactives Gatekeeper globalmente. Añade un RSS, inicia un episodio, minimiza la app y abre un juego desde Steam. Comprueba que sigue sonando, que los volúmenes se pueden ajustar por separado y que la posición se recupera después de salir y abrir de nuevo. Para terminar el proceso, usa **Salir** desde el icono de la bandeja.
