@@ -21,14 +21,14 @@ jobs:
       - run: npm test
       - run: npm run test:e2e
       - run: npm run dist -- --mac --publish never
+      - name: Check architectures
+        run: lipo dist/mac-universal/PodcastSteam.app/Contents/MacOS/PodcastSteam -verify_arch arm64 x86_64
+      - name: Check signature
+        run: codesign --verify --deep --strict --verbose=2 dist/mac-universal/PodcastSteam.app
       - name: Test packaged universal app
         env:
           PODCASTSTEAM_EXECUTABLE: ${{ github.workspace }}/dist/mac-universal/PodcastSteam.app/Contents/MacOS/PodcastSteam
         run: npm run test:e2e
-      - name: Check architectures and signature
-        run: |
-          lipo -verify_arch arm64 x86_64 dist/mac-universal/PodcastSteam.app/Contents/MacOS/PodcastSteam
-          codesign --verify --deep --strict --verbose=2 dist/mac-universal/PodcastSteam.app
       - name: Checksums
         working-directory: dist
         run: shasum -a 256 PodcastSteam-*-mac-universal.dmg > SHA256SUMS-macOS
@@ -38,6 +38,7 @@ jobs:
           RELEASE_REF: ${{ github.ref_name }}
         run: |
           RELEASE_TAG="${RELEASE_REF#macos-}"
+          RELEASE_TAG="${RELEASE_TAG%%-retry*}"
           EXPECTED_TAG="v$(node -p 'require("./package.json").version')"
           test "$RELEASE_TAG" = "$EXPECTED_TAG"
           gh release upload "$RELEASE_TAG" dist/*-mac-universal.dmg dist/SHA256SUMS-macOS --repo "$GITHUB_REPOSITORY"
