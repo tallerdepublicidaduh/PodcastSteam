@@ -114,8 +114,58 @@ test('RSS → audio en segundo plano → persistencia → reanudación', async (
     await page.keyboard.press('Space');
     await expect.poll(() => page.locator('#audio').evaluate(audio => audio.paused)).toBe(false);
     await page.keyboard.press('Space');
+    // A real animation-frame boundary gives both press and release to the poller.
+    async function pressPad(index) {
+      await page.evaluate(async button => {
+        window.testPad.buttons[button].pressed = true;
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        window.testPad.buttons[button].pressed = false;
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      }, index);
+    }
+    await expect(page.locator('#input-mode')).toHaveText('Mando conectado');
+    await page.locator('[data-view="all"]').focus();
+    await pressPad(13);
+    await expect(page.locator('[data-view="progress"]')).toBeFocused();
+    expect(await page.locator('body').evaluate(body => body.classList.contains('using-gamepad'))).toBe(true);
+    expect(await page.locator('[data-view="progress"]').evaluate(node => getComputedStyle(node).outlineStyle)).toBe('solid');
+    await pressPad(0);
+    await expect(page.locator('[data-view="progress"]')).toHaveAttribute('aria-current', 'page');
+    await pressPad(1);
+    await expect(page.locator('[data-view="all"]')).toHaveAttribute('aria-current', 'page');
+    await page.locator('.episode .icon-button').focus();
+    await pressPad(0);
+    await expect(page.locator('.episode .icon-button')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('.episode .icon-button')).toBeFocused();
+    await pressPad(0);
+    await expect(page.locator('.episode .icon-button')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#volume').focus();
+    await pressPad(15);
+    expect(await page.locator('#audio').evaluate(audio => audio.volume)).toBeCloseTo(0.4);
+    await expect(page.locator('#volume')).toBeFocused();
+    await page.locator('#volume').fill('0');
+    await pressPad(14);
+    expect(await page.locator('#audio').evaluate(audio => audio.volume)).toBe(0);
+    await page.locator('#speed').focus();
+    await pressPad(15);
+    expect(await page.locator('#audio').evaluate(audio => audio.playbackRate)).toBe(2);
+    await pressPad(14);
+    expect(await page.locator('#audio').evaluate(audio => audio.playbackRate)).toBe(1.5);
+    await page.locator('#add-top').focus();
+    await pressPad(0);
+    await expect(page.locator('#add-dialog')).toBeVisible();
+    await expect(page.locator('#rss-url')).toBeFocused();
+    await pressPad(1);
+    await expect(page.locator('#add-dialog')).not.toBeVisible();
     await page.setViewportSize({ width: 1280, height: 800 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    for (const size of [{ width: 780, height: 600 }, { width: 1280, height: 800 }]) {
+      await page.setViewportSize(size);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      const player = await page.locator('.player').boundingBox();
+      expect(player.y + player.height).toBeLessThanOrEqual(size.height - 39);
+      await page.screenshot({ path: testInfo.outputPath(`steam-${size.width}.png`) });
+    }
     expect(errors).toEqual([]);
   } finally {
     await app?.close();

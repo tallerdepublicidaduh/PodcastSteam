@@ -1,6 +1,10 @@
 # PodcastSteam
 
-Un reproductor de podcasts públicos por RSS para acompañar tus partidas. Primera versión de escritorio en español con Electron, orientada a Windows, macOS y SteamOS. Es una aplicación independiente que puedes añadir a Steam como producto ajeno a Steam; no modifica el cliente de Steam ni requiere su API.
+Un reproductor de podcasts públicos por RSS para acompañar tus partidas. Aplicación de escritorio en español con Electron, orientada a Windows, macOS y SteamOS. Es una aplicación independiente que puedes añadir a Steam como producto ajeno a Steam; no modifica el cliente de Steam ni requiere su API.
+
+La versión 0.2.0 presenta una interfaz inspirada en Steam: azul oscuro, tarjetas de biblioteca, controles amplios y foco de alto contraste para mando. La captura utiliza contenido de ejemplo, que no se añade a tu biblioteca.
+
+![Interfaz de PodcastSteam con una biblioteca de ejemplo](docs/interface.png)
 
 ## Desarrollo
 
@@ -21,7 +25,7 @@ Añade la URL RSS pública de un podcast desde **Añadir podcast**. Las páginas
 - Guardado local de biblioteca, posición, velocidad y volumen en el perfil de Electron. No hay sincronización entre dispositivos.
 - La reproducción continúa al minimizar u ocultar la ventana. En Windows/macOS, cerrar la ventana la oculta en la bandeja; **Salir** en la bandeja termina la aplicación. En Linux, cerrar la ventana termina la aplicación: minimízala o cambia al juego para conservar el audio.
 - Teclas multimedia compatibles con Media Session, según el sistema. Espacio reproduce/pausa y las flechas izquierda/derecha saltan cuando el foco no está en un campo o botón.
-- Mando con mapeo estándar: cruceta cambia el foco, A activa, B cierra el diálogo, X reproduce/pausa y LB/RB saltan. El mando controla la app cuando tiene el foco. Steam Input debe permitir entrada de mando estándar o mapear las teclas; no interceptamos botones mientras juegas.
+- Mando con mapeo estándar: la cruceta navega según la posición visual de los controles, A activa, B cierra el diálogo o vuelve a la biblioteca, X reproduce/pausa y LB/RB saltan. Al enfocar el volumen, la posición o la velocidad, izquierda/derecha ajustan su valor. El foco se conserva al cambiar favoritos o seleccionar tarjetas, y una barra inferior muestra las acciones disponibles. La app atiende al mando solo con su ventana enfocada. Steam Input debe permitir entrada de mando estándar o mapear las teclas; la integración física con Steam Deck sigue pendiente de prueba. Introduce el RSS con teclado o con el teclado en pantalla del sistema.
 
 El código del renderer no tiene acceso a Node.js. Los RSS se leen mediante una API limitada, el texto remoto se inserta sin HTML y solo se aceptan URLs de audio HTTP/HTTPS. Los proveedores reciben peticiones normales de RSS/audio/portadas, con la información de conexión habitual. Los feeds están limitados a 5 MB y las peticiones de RSS a 20 segundos.
 

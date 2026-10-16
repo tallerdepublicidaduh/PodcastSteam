@@ -33,14 +33,21 @@ function element(tag, className, text) {
   if (text !== undefined) node.textContent = text;
   return node;
 }
+function icon(name) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('icon'); svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', `#icon-${name}`); svg.append(use);
+  return svg;
+}
 function cover(container, url) {
   container.replaceChildren();
   if (url) {
     const img = element('img');
     img.src = url; img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
-    img.addEventListener('error', () => { container.textContent = '◉'; });
+    img.addEventListener('error', () => { container.replaceChildren(icon('audio')); });
     container.append(img);
-  } else container.textContent = '◉';
+  } else container.append(icon('audio'));
 }
 function favorite(id) {
   if (state.favorites.includes(id)) state.favorites = state.favorites.filter(item => item !== id);
@@ -48,20 +55,31 @@ function favorite(id) {
   persist(); render(); updatePlayer();
 }
 function render() {
+  const focusKey = document.activeElement?.dataset.focusKey;
+  document.body.classList.toggle('has-library', state.feeds.length > 0);
   $('#library-count').textContent = state.feeds.length;
   $('#podcast-count').textContent = `${state.feeds.length} podcast${state.feeds.length === 1 ? '' : 's'}`;
   $('#view-title').firstChild.textContent = { all: 'Mi biblioteca ', progress: 'Seguir escuchando ', favorites: 'Favoritos ' }[view];
   $('#add-hero').textContent = state.feeds.length ? '＋ Descubrir otro podcast' : '＋ Añadir mi primer podcast';
   const tabs = $('#feed-tabs'); tabs.replaceChildren();
   if (state.feeds.length) {
-    const all = element('button', `feed-tab ${selectedFeed === null ? 'selected' : ''}`, 'Todos');
+    const all = element('button', `feed-tab all-feeds ${selectedFeed === null ? 'selected' : ''}`);
+    const allCover = element('span', 'feed-cover'); allCover.append(icon('library'));
+    all.append(allCover, element('strong', '', 'Todos'), element('small', '', `${state.feeds.length} podcast${state.feeds.length === 1 ? '' : 's'}`));
+    all.dataset.focusKey = 'feed:all'; all.setAttribute('aria-pressed', selectedFeed === null);
     all.onclick = () => { selectedFeed = null; render(); }; tabs.append(all);
     for (const feed of state.feeds) {
-      const tab = element('button', `feed-tab ${selectedFeed === feed.url ? 'selected' : ''}`, feed.title);
+      const tab = element('button', `feed-tab ${selectedFeed === feed.url ? 'selected' : ''}`);
+      const art = element('span', 'feed-cover'); cover(art, feed.artwork);
+      tab.append(art, element('strong', '', feed.title), element('small', '', `${feed.episodes.length} episodio${feed.episodes.length === 1 ? '' : 's'}`));
+      tab.dataset.focusKey = `feed:${feed.url}`; tab.title = feed.title;
+      tab.setAttribute('aria-pressed', selectedFeed === feed.url);
       tab.onclick = () => { selectedFeed = feed.url; render(); }; tabs.append(tab);
     }
     if (selectedFeed) {
-      const remove = element('button', 'icon-button remove-feed', 'Eliminar podcast');
+      const remove = element('button', 'icon-button remove-feed'); remove.append(icon('close'));
+      remove.title = 'Eliminar podcast'; remove.setAttribute('aria-label', 'Eliminar podcast');
+      remove.dataset.focusKey = 'feed:remove';
       remove.onclick = () => {
         if (!confirm('¿Eliminar este podcast de tu biblioteca y sus episodios guardados?')) return;
         const feed = state.feeds.find(item => item.url === selectedFeed);
@@ -92,16 +110,19 @@ function render() {
       const metadata = [Number.isFinite(date.getTime()) ? date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '', episode.duration,
         state.progress[episode.id]?.completed ? 'Escuchado' : state.progress[episode.id]?.time ? `Continuar en ${clock(state.progress[episode.id].time)}` : 'Sin escuchar'].filter(Boolean).join(' · ');
       info.append(element('small', '', metadata));
-      const fav = element('button', 'icon-button', state.favorites.includes(episode.id) ? '♥' : '♡');
+      const fav = element('button', 'icon-button'); fav.append(icon('heart'));
+      fav.dataset.focusKey = `favorite:${episode.id}`;
       fav.setAttribute('aria-label', `Favorito: ${episode.title}`); fav.setAttribute('aria-pressed', state.favorites.includes(episode.id));
       fav.onclick = () => favorite(episode.id);
-      const play = element('button', 'episode-play', '▶'); play.setAttribute('aria-label', `Reproducir ${episode.title}`);
+      const play = element('button', 'episode-play'); play.append(icon('play'));
+      play.dataset.focusKey = `play:${episode.id}`; play.setAttribute('aria-label', `Reproducir ${episode.title}`);
       play.onclick = () => selectEpisode(feed, episode);
       row.append(art, info, fav, play); list.append(row);
     }
   }
   $('#empty').hidden = state.feeds.length > 0;
   if (state.feeds.length && !count) list.append(element('p', 'empty', view === 'progress' ? 'Los episodios que empieces aparecerán aquí.' : view === 'favorites' ? 'Marca un episodio con el corazón para guardarlo aquí.' : 'No hay episodios de audio que coincidan.'));
+  if (focusKey) document.querySelector(`[data-focus-key="${CSS.escape(focusKey)}"]`)?.focus({ preventScroll: true });
 }
 
 function saveProgress(force = false) {
@@ -134,11 +155,11 @@ function updatePlayer() {
   const ready = Boolean(current);
   for (const selector of ['#play', '#back', '#forward', '#player-favorite']) $(selector).disabled = !ready;
   $('#seek').disabled = !ready || !Number.isFinite(audio.duration);
-  $('#now-title').textContent = current?.episode.title || 'Tu próxima historia te espera';
-  $('#now-podcast').textContent = current?.feedTitle || 'Elige un episodio para empezar';
-  $('#play').textContent = audio.paused ? '▶' : 'Ⅱ';
+  $('#now-title').textContent = current?.episode.title || 'Elige tu próxima historia';
+  $('#now-podcast').textContent = current?.feedTitle || 'Selecciona un episodio de tu biblioteca';
+  $('#playback-status').textContent = !current ? 'LISTO PARA ESCUCHAR' : audio.paused ? 'EN PAUSA' : 'REPRODUCIENDO';
+  $('#play').replaceChildren(icon(audio.paused ? 'play' : 'pause'));
   $('#play').setAttribute('aria-label', audio.paused ? 'Reproducir' : 'Pausar');
-  $('#player-favorite').textContent = current && state.favorites.includes(current.episode.id) ? '♥' : '♡';
   $('#player-favorite').setAttribute('aria-pressed', Boolean(current && state.favorites.includes(current.episode.id)));
   cover($('#mini-cover'), current?.artwork);
   if ('mediaSession' in navigator) {
@@ -174,7 +195,10 @@ $('#player-favorite').onclick = () => { if (current) favorite(current.episode.id
 $('#search').oninput = render;
 document.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => {
   view = button.dataset.view;
-  document.querySelectorAll('[data-view]').forEach(item => item.classList.toggle('active', item === button));
+  document.querySelectorAll('[data-view]').forEach(item => {
+    item.classList.toggle('active', item === button);
+    if (item === button) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
+  });
   render();
 }; });
 function openDialog() { $('#form-error').textContent = ''; $('#add-dialog').showModal(); $('#rss-url').focus(); }
@@ -226,28 +250,43 @@ if ('mediaSession' in navigator) {
     try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* OS-dependent media actions. */ }
   }
 }
-// Standard Gamepad mapping: D-pad navigates, A activates, B closes, X toggles, LB/RB seek.
+// Controls affect the app only while its window has focus, leaving game input alone.
 const previousButtons = new Map();
+let controllerConnected = false;
+document.addEventListener('pointerdown', () => document.body.classList.remove('using-gamepad'));
 function pollGamepads() {
-  for (const pad of navigator.getGamepads?.() || []) {
-    if (!pad || pad.mapping !== 'standard') continue;
+  const pads = [...(navigator.getGamepads?.() || [])].filter(pad => pad?.mapping === 'standard');
+  if (Boolean(pads.length) !== controllerConnected) {
+    controllerConnected = Boolean(pads.length);
+    $('#input-mode').textContent = controllerConnected ? 'Mando conectado' : 'Teclado y ratón';
+    if (!controllerConnected) document.body.classList.remove('using-gamepad');
+  }
+  for (const pad of pads) {
     const previous = previousButtons.get(pad.index) || [];
     const pressed = index => pad.buttons[index]?.pressed && !previous[index];
+    const buttons = pad.buttons.map(button => button.pressed);
+    previousButtons.set(pad.index, buttons);
+    if (document.hidden || !document.hasFocus()) continue;
+    if (buttons.some((value, index) => value && !previous[index])) document.body.classList.add('using-gamepad');
     if (pressed(2)) toggle();
     if (pressed(4)) skip(-15);
     if (pressed(5)) skip(30);
-    if (pressed(1) && $('#add-dialog').open && !loading) $('#add-dialog').close();
-    if (pressed(0) && document.activeElement instanceof HTMLElement) document.activeElement.click();
-    if ([12, 13, 14, 15].some(pressed)) {
-      const root = $('#add-dialog').open ? $('#add-dialog') : document;
-      const focusable = [...root.querySelectorAll('button:not(:disabled), input:not(:disabled), select, a[href]')].filter(node => node.getClientRects().length);
-      if (focusable.length) {
-        const direction = pressed(12) || pressed(14) ? -1 : 1;
-        const index = focusable.indexOf(document.activeElement);
-        focusable[index < 0 ? (direction > 0 ? 0 : focusable.length - 1) : (index + direction + focusable.length) % focusable.length].focus();
-      }
+    if (pressed(1)) {
+      if ($('#add-dialog').open) { if (!loading) $('#add-dialog').close(); }
+      else if (selectedFeed) { selectedFeed = null; render(); }
+      else if (view !== 'all') $('[data-view="all"]').click();
+      else $('[data-view="all"]').focus();
     }
-    previousButtons.set(pad.index, pad.buttons.map(button => button.pressed));
+    if (pressed(0)) {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && !active.matches(':disabled') && (!$('#add-dialog').open || $('#add-dialog').contains(active))) active.click();
+    }
+    const directionIndex = [12, 13, 14, 15].find(pressed);
+    if (directionIndex !== undefined) {
+      const root = $('#add-dialog').open ? $('#add-dialog') : document;
+      const adjusted = directionIndex >= 14 && window.controllerNavigation.adjust(document.activeElement, directionIndex === 14 ? -1 : 1);
+      if (!adjusted) window.controllerNavigation.move({12: 'up', 13: 'down', 14: 'left', 15: 'right'}[directionIndex], root);
+    }
   }
   requestAnimationFrame(pollGamepads);
 }

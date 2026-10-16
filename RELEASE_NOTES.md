@@ -1,14 +1,29 @@
-Primera versión de prueba de PodcastSteam: escucha podcasts RSS públicos en una aplicación independiente que puedes añadir a Steam.
+## PodcastSteam 0.2.0 · Tu biblioteca, lista para jugar
 
-- Biblioteca RSS, búsqueda, favoritos y reanudación del punto de escucha.
-- Volumen independiente, velocidad de reproducción y saltos de −15/+30 segundos.
-- Controles de teclado y mando estándar cuando la aplicación tiene el foco.
-- Validación de audio con ventana oculta y persistencia al reiniciar mediante una prueba de Electron/Linux con audio local real.
+Nueva interfaz inspirada en Steam: tonos azul oscuro, acentos cian y controles más visibles.
 
-Este paquete AppImage es para Linux x86_64 (incluido el hardware de Steam Deck), está sin firmar y es experimental. No se ha validado todavía durante una partida real, en el modo Juego de SteamOS ni en hardware macOS/Windows. Minimiza la aplicación o cambia al juego sin cerrar la ventana para conservar la reproducción en Linux. El proceso de prueba automatizado usa un sandbox desactivado; la aplicación distribuida conserva la configuración normal de Electron.
+- Biblioteca con tarjetas de podcasts, portadas y número de episodios.
+- Reproductor fijo con botones más grandes y estado de reproducción visible.
+- Foco de alto contraste y navegación con cruceta según la posición de los controles.
+- Ajustes de volumen, posición y velocidad con izquierda/derecha del mando; A selecciona, B vuelve, X reproduce/pausa y LB/RB saltan.
+- Barra inferior con las acciones de mando e indicador de conexión. El mando se atiende solo cuando la app tiene el foco.
+- Biblioteca, favoritos y puntos de escucha de la versión anterior conservan el mismo formato de guardado.
 
-Descarga el AppImage, dale permiso de ejecución y añádelo a Steam como producto ajeno a Steam. Requiere un entorno gráfico, acceso a los servidores RSS/audio y una configuración de sandbox compatible con Electron. Si tu distribución no permite ejecutar AppImage mediante FUSE, puedes probar su modo de extracción: `APPIMAGE_EXTRACT_AND_RUN=1 ./PodcastSteam-0.1.0.AppImage`.
+![Vista de ejemplo de PodcastSteam](https://raw.githubusercontent.com/tallerdepublicidaduh/PodcastSteam/v0.2.0/docs/interface.png)
 
-También se incluye `PodcastSteam-0.1.0-mac-universal.dmg` para Mac Intel y Apple Silicon. La compilación en GitHub comprueba ambas arquitecturas, verifica la firma ad hoc y ejecuta la prueba de escritorio sobre la aplicación universal empaquetada. Abre el DMG y arrastra PodcastSteam a Aplicaciones. No tiene certificado Developer ID ni notarización de Apple; si macOS la bloquea después de intentar abrirla, autoriza esta aplicación concreta desde Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente. No desactives Gatekeeper globalmente. La escucha durante un juego real sigue pendiente de prueba en tu equipo.
+La captura muestra contenido de ejemplo; la biblioteca de la aplicación se llena con tus propios enlaces RSS.
 
-Consulta el README de la rama main para los controles, las instrucciones de Steam y las limitaciones. `SHA256SUMS` (Linux) y `SHA256SUMS-macOS` permiten comprobar la integridad de los archivos descargados. El instalador de Windows todavía no está adjunto a esta release.
+## Descargas
+
+- **Mac:** `PodcastSteam-0.2.0-mac-universal.dmg`, para Intel y Apple Silicon. Abre el DMG, arrastra la app a Aplicaciones y sustituye la anterior con la aplicación cerrada. El proceso de publicación verifica ambas arquitecturas, la firma ad hoc y la prueba de reproducción sobre la app universal empaquetada antes de adjuntar el DMG.
+- **Linux/SteamOS:** `PodcastSteam-0.2.0.AppImage`, para x86_64. Dale permiso de ejecución y añádela a Steam como producto ajeno a Steam. Requiere entorno gráfico y la configuración de sandbox de Electron correspondiente a tu distribución.
+
+Cada paquete aparece cuando termina su compilación y verificación. `SHA256SUMS` y `SHA256SUMS-macOS` contienen las sumas de integridad. No se incluye instalador de Windows en esta release.
+
+## Pruebas y límites de esta versión de prueba
+
+La prueba de escritorio comprueba reproducción con audio real local, avance con ventana oculta, reanudación, favoritos, volumen y velocidad; también navegación espacial, conservación del foco, ajuste de controles con mando simulado y distribución a 1280×800 y 780×600. El mando físico, Steam Input y la reproducción durante una partida real siguen pendientes de validación en hardware.
+
+El DMG usa firma ad hoc y no tiene certificado Developer ID ni notarización de Apple. Si macOS lo bloquea después del primer intento, autoriza esta aplicación concreta en Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente. No desactives Gatekeeper globalmente.
+
+En Linux, cerrar la ventana termina la aplicación: minimízala o cambia al juego para conservar el audio. En macOS/Windows, cerrar la ventana la oculta en la bandeja; usa Salir para terminar el proceso. Los podcasts exclusivos de servicios de pago no están incluidos.
